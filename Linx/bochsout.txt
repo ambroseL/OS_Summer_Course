@@ -32,37 +32,37 @@
 00000000000i[     ]   SB16 support: yes
 00000000000i[     ]   USB support: yes
 00000000000i[     ]   VGA extension support: vbe cirrus
-00000000000i[MEM0 ] allocated memory at 0xb3a14008. after alignment, vector=0xb3a15000
+00000000000i[MEM0 ] allocated memory at 0xb3a59008. after alignment, vector=0xb3a5a000
 00000000000i[MEM0 ] 32.00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=32
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('/usr/share/bochs/BIOS-bochs-latest')
-00000000000i[     ] lt_dlhandle is 0xa6db5d0
+00000000000i[     ] lt_dlhandle is 0xa1175d0
 00000000000i[PLGIN] loaded plugin libbx_hdimage.so
-00000000000i[     ] lt_dlhandle is 0xa6dbb80
+00000000000i[     ] lt_dlhandle is 0xa117b80
 00000000000i[PLGIN] loaded plugin libbx_pci.so
-00000000000i[     ] lt_dlhandle is 0xa6dc298
+00000000000i[     ] lt_dlhandle is 0xa118298
 00000000000i[PLGIN] loaded plugin libbx_pci2isa.so
-00000000000i[     ] lt_dlhandle is 0xa6dc990
+00000000000i[     ] lt_dlhandle is 0xa118990
 00000000000i[PLGIN] loaded plugin libbx_acpi.so
-00000000000i[     ] lt_dlhandle is 0xa6dcfe0
+00000000000i[     ] lt_dlhandle is 0xa118fe0
 00000000000i[PLGIN] loaded plugin libbx_cmos.so
-00000000000i[     ] lt_dlhandle is 0xa6dd550
+00000000000i[     ] lt_dlhandle is 0xa119550
 00000000000i[PLGIN] loaded plugin libbx_dma.so
-00000000000i[     ] lt_dlhandle is 0xa6ddbe0
+00000000000i[     ] lt_dlhandle is 0xa119be0
 00000000000i[PLGIN] loaded plugin libbx_pic.so
-00000000000i[     ] lt_dlhandle is 0xa6de100
+00000000000i[     ] lt_dlhandle is 0xa11a100
 00000000000i[PLGIN] loaded plugin libbx_pit.so
-00000000000i[     ] lt_dlhandle is 0xa6de770
+00000000000i[     ] lt_dlhandle is 0xa11a770
 00000000000i[PLGIN] loaded plugin libbx_floppy.so
-00000000000i[     ] lt_dlhandle is 0xa6defc0
+00000000000i[     ] lt_dlhandle is 0xa11afc0
 00000000000i[PLGIN] loaded plugin libbx_vga.so
-00000000000i[     ] lt_dlhandle is 0xa6df4b8
+00000000000i[     ] lt_dlhandle is 0xa11b4b8
 00000000000i[PLGIN] loaded plugin libbx_ioapic.so
-00000000000i[     ] lt_dlhandle is 0xa6dfa90
+00000000000i[     ] lt_dlhandle is 0xa11ba90
 00000000000i[PLGIN] loaded plugin libbx_keyboard.so
-00000000000i[     ] lt_dlhandle is 0xa6e00c0
+00000000000i[     ] lt_dlhandle is 0xa11c0c0
 00000000000i[PLGIN] loaded plugin libbx_harddrv.so
-00000000000i[     ] lt_dlhandle is 0xa6f1d78
+00000000000i[     ] lt_dlhandle is 0xa12dd78
 00000000000i[PLGIN] loaded plugin libbx_pci_ide.so
 00000000000i[PLGIN] init_dev of 'pci' plugin device by virtual method
 00000000000i[PCI  ] 440FX Host bridge present at device 0, function 0
@@ -70,7 +70,7 @@
 00000000000i[PCI  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[PLGIN] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Tue Aug 30 22:28:02 2016 (time0=1472567282)
+00000000000i[CMOS ] Setting initial clock to: Thu Sep  1 13:17:08 2016 (time0=1472707028)
 00000000000i[PLGIN] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[PLGIN] init_dev of 'pic' plugin device by virtual method
@@ -216,4 +216,9 @@
 00001533939i[VBIOS] VBE Bios $Id: vbe.c,v 1.64 2011/07/19 18:25:05 vruppert Exp $
 00001600001i[XGUI ] charmap update. Font Height is 16
 00014040957i[BIOS ] Booting from 0000:7c00
-00025605016i[MEM0 ] allocate_block: block=0x2 used 0x3 of 0x20
+00025196625i[MEM0 ] allocate_block: block=0x2 used 0x3 of 0x20
+00426587981i[CPU0 ] math_abort: MSDOS compatibility FPU exception
+00426587982i[CPU0 ] math_abort: MSDOS compatibility FPU exception
+00426587987i[CPU0 ] math_abort: MSDOS compatibility FPU exception
+00426587988i[CPU0 ] math_abort: MSDOS compatibility FPU exception
+00426587989i[CPU0 ] math_abort: MSDOS compatibility FPU exception

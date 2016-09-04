@@ -54,7 +54,13 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 			break;
 		}
 		case 's':
+		{
+			strcpy(p,(*((char**)p_next_arg)));
+			p += strlen(*((char**)p_next_arg));
+			p_next_arg += 4;
 			break;
+		}	
+		
 		default:
 			break;
 		}

@@ -1,4 +1,3 @@
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                             keyboard.c
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -13,28 +12,28 @@
 #include "tty.h"
 #include "console.h"
 #include "global.h"
+#include "proto.h"
 #include "keyboard.h"
 #include "keymap.h"
-#include "proto.h"
 
-PRIVATE	KB_INPUT	kb_in;
-PRIVATE	t_bool		code_with_E0	= FALSE;
-PRIVATE	t_bool		shift_l;		/* l shift state	*/
-PRIVATE	t_bool		shift_r;		/* r shift state	*/
-PRIVATE	t_bool		alt_l;			/* l alt state		*/
-PRIVATE	t_bool		alt_r;			/* r left state		*/
-PRIVATE	t_bool		ctrl_l;			/* l ctrl state		*/
-PRIVATE	t_bool		ctrl_r;			/* l ctrl state		*/
-PRIVATE	t_bool		caps_lock;		/* Caps Lock		*/
-PRIVATE	t_bool		num_lock;		/* Num Lock		*/
-PRIVATE	t_bool		scroll_lock;		/* Scroll Lock		*/
-PRIVATE	int		column		= 0;	/* keyrow[column] 将是 keymap 中某一个值 */
+PRIVATE KB_INPUT	kb_in;
 
-/* 本文件内函数声明 */
-PRIVATE t_8	get_byte_from_kb_buf();
-PRIVATE void	set_leds();
-PRIVATE void	kb_wait();
-PRIVATE void	kb_ack();
+PRIVATE	int	code_with_E0;
+PRIVATE	int	shift_l;	/* l shift state */
+PRIVATE	int	shift_r;	/* r shift state */
+PRIVATE	int	alt_l;		/* l alt state	 */
+PRIVATE	int	alt_r;		/* r left state	 */
+PRIVATE	int	ctrl_l;		/* l ctrl state	 */
+PRIVATE	int	ctrl_r;		/* l ctrl state	 */
+PRIVATE	int	caps_lock;	/* Caps Lock	 */
+PRIVATE	int	num_lock;	/* Num Lock	 */
+PRIVATE	int	scroll_lock;	/* Scroll Lock	 */
+PRIVATE	int	column;
+
+PRIVATE t_8	get_byte_from_kbuf();
+PRIVATE void    set_leds();
+PRIVATE void    kb_wait();
+PRIVATE void    kb_ack();
 
 /*======================================================================*
                             keyboard_handler
@@ -56,47 +55,54 @@ PUBLIC void keyboard_handler(int irq)
 
 /*======================================================================*
                            init_keyboard
- *======================================================================*/
+*======================================================================*/
 PUBLIC void init_keyboard()
 {
 	kb_in.count = 0;
 	kb_in.p_head = kb_in.p_tail = kb_in.buf;
 
-	caps_lock	= 0;
-	num_lock	= 1;
-	scroll_lock	= 0;
+	shift_l	= shift_r = 0;
+	alt_l	= alt_r   = 0;
+	ctrl_l	= ctrl_r  = 0;
+
+	caps_lock   = 0;
+	num_lock    = 1;
+	scroll_lock = 0;
 
 	set_leds();
 
-	put_irq_handler(KEYBOARD_IRQ, keyboard_handler);	/* 设定键盘中断处理程序 */
-	enable_irq(KEYBOARD_IRQ);				/* 开键盘中断 */
+        put_irq_handler(KEYBOARD_IRQ, keyboard_handler);/*设定键盘中断处理程序*/
+        enable_irq(KEYBOARD_IRQ);                       /*开键盘中断*/
 }
 
 
 /*======================================================================*
                            keyboard_read
- *======================================================================*/
+*======================================================================*/
 PUBLIC void keyboard_read(TTY* p_tty)
 {
 	t_8	scan_code;
-	t_bool	make;	/* TRUE : make  */
-			/* FALSE: break */
-	t_32	key = 0;/* 用一个整型来表示一个键。 */
-			/* 比如，如果 Home 被按下，则 key 值将为定义在 keyboard.h 中的 'HOME'。*/
+	int	make;	/* 1: make;  0: break. */
+
+	t_32	key = 0;/* 用一个整型来表示一个键。比如，如果 Home 被按下，
+			 * 则 key 值将为定义在 keyboard.h 中的 'HOME'。
+			 */
 	t_32*	keyrow;	/* 指向 keymap[] 的某一行 */
 
 	if(kb_in.count > 0){
-		code_with_E0 = FALSE;
-		scan_code = get_byte_from_kb_buf();
+		code_with_E0 = 0;
+
+		scan_code = get_byte_from_kbuf();
 
 		/* 下面开始解析扫描码 */
 		if (scan_code == 0xE1) {
 			int i;
-			t_8 pausebreak_scan_code[] = {0xE1, 0x1D, 0x45, 0xE1, 0x9D, 0xC5};
-			t_bool is_pausebreak = TRUE;
+			t_8 pausebrk_scode[] = {0xE1, 0x1D, 0x45,
+					       0xE1, 0x9D, 0xC5};
+			int is_pausebreak = 1;
 			for(i=1;i<6;i++){
-				if (get_byte_from_kb_buf() != pausebreak_scan_code[i]) {
-					is_pausebreak = FALSE;
+				if (get_byte_from_kbuf() != pausebrk_scode[i]) {
+					is_pausebreak = 0;
 					break;
 				}
 			}
@@ -105,43 +111,42 @@ PUBLIC void keyboard_read(TTY* p_tty)
 			}
 		}
 		else if (scan_code == 0xE0) {
-			code_with_E0 = TRUE;
-			scan_code = get_byte_from_kb_buf();
+			scan_code = get_byte_from_kbuf();
 
 			/* PrintScreen 被按下 */
 			if (scan_code == 0x2A) {
-				code_with_E0 = FALSE;
-				if ((scan_code = get_byte_from_kb_buf()) == 0xE0) {
-					code_with_E0 = TRUE;
-					if ((scan_code = get_byte_from_kb_buf()) == 0x37) {
+				if (get_byte_from_kbuf() == 0xE0) {
+					if (get_byte_from_kbuf() == 0x37) {
 						key = PRINTSCREEN;
-						make = TRUE;
+						make = 1;
 					}
 				}
 			}
 			/* PrintScreen 被释放 */
-			else if (scan_code == 0xB7) {
-				code_with_E0 = FALSE;
-				if ((scan_code = get_byte_from_kb_buf()) == 0xE0) {
-					code_with_E0 = TRUE;
-					if ((scan_code = get_byte_from_kb_buf()) == 0xAA) {
+			if (scan_code == 0xB7) {
+				if (get_byte_from_kbuf() == 0xE0) {
+					if (get_byte_from_kbuf() == 0xAA) {
 						key = PRINTSCREEN;
-						make = FALSE;
+						make = 0;
 					}
 				}
 			}
-		} /* 如果不是 PrintScreen。则此时 scan_code 为 0xE0 紧跟的那个值。 */
+			/* 不是PrintScreen, 此时scan_code为0xE0紧跟的那个值. */
+			if (key == 0) {
+				code_with_E0 = 1;
+			}
+		}
 		if ((key != PAUSEBREAK) && (key != PRINTSCREEN)) {
 			/* 首先判断Make Code 还是 Break Code */
-			make = (scan_code & FLAG_BREAK ? FALSE : TRUE);
-			
+			make = (scan_code & FLAG_BREAK ? 0 : 1);
+
 			/* 先定位到 keymap 中的行 */
 			keyrow = &keymap[(scan_code & 0x7F) * MAP_COLS];
 
 			column = 0;
 
-			t_bool caps = shift_l || shift_r;
-			if (!caps_lock) {
+			int caps = shift_l || shift_r;
+			if (caps_lock) {
 				if ((keyrow[0] >= 'a') && (keyrow[0] <= 'z')){
 					caps = !caps;
 				}
@@ -158,22 +163,22 @@ PUBLIC void keyboard_read(TTY* p_tty)
 
 			switch(key) {
 			case SHIFT_L:
-				shift_l	= make;
+				shift_l = make;
 				break;
 			case SHIFT_R:
-				shift_r	= make;
+				shift_r = make;
 				break;
 			case CTRL_L:
-				ctrl_l	= make;
+				ctrl_l = make;
 				break;
 			case CTRL_R:
-				ctrl_r	= make;
+				ctrl_r = make;
 				break;
 			case ALT_L:
-				alt_l	= make;
+				alt_l = make;
 				break;
 			case ALT_R:
-				alt_l	= make;
+				alt_l = make;
 				break;
 			case CAPS_LOCK:
 				if (make) {
@@ -196,122 +201,116 @@ PUBLIC void keyboard_read(TTY* p_tty)
 			default:
 				break;
 			}
-		}
 
-		if(make){ /* 忽略 Break Code */
-			t_bool pad = FALSE;
+			if (make) { /* 忽略 Break Code */
+				int pad = 0;
 
-			/* 首先处理小键盘 */
-			if ((key >= PAD_SLASH) && (key <= PAD_9)) {
-				pad = TRUE;
-				switch(key) {	/* '/', '*', '-', '+', and 'Enter' in num pad  */
-				case PAD_SLASH:
-					key = '/';
-					break;
-				case PAD_STAR:
-					key = '*';
-					break;
-				case PAD_MINUS:
-					key = '-';
-					break;
-				case PAD_PLUS:
-					key = '+';
-					break;
-				case PAD_ENTER:
-					key = ENTER;
-					break;
-				default:	/* keys whose value depends on the NumLock */
-					if (num_lock) {	/* '0' ~ '9' and '.' in num pad */
-						if ((key >= PAD_0) && (key <= PAD_9)) {
+				/* 首先处理小键盘 */
+				if ((key >= PAD_SLASH) && (key <= PAD_9)) {
+					pad = 1;
+					switch(key) {
+					case PAD_SLASH:
+						key = '/';
+						break;
+					case PAD_STAR:
+						key = '*';
+						break;
+					case PAD_MINUS:
+						key = '-';
+						break;
+					case PAD_PLUS:
+						key = '+';
+						break;
+					case PAD_ENTER:
+						key = ENTER;
+						break;
+					default:
+						if (num_lock &&
+						    (key >= PAD_0) &&
+						    (key <= PAD_9)) {
 							key = key - PAD_0 + '0';
 						}
-						else if (key == PAD_DOT) {
+						else if (num_lock &&
+							 (key == PAD_DOT)) {
 							key = '.';
 						}
-					}
-					else{
-						switch(key) {
-						case PAD_HOME:
-							key = HOME;
-							break;
-						case PAD_END:
-							key = END;
-							break;
-						case PAD_PAGEUP:
-							key = PAGEUP;
-							break;
-						case PAD_PAGEDOWN:
-							key = PAGEDOWN;
-							break;
-						case PAD_INS:
-							key = INSERT;
-							break;
-						case PAD_UP:
-							key = UP;
-							break;
-						case PAD_DOWN:
-							key = DOWN;
-							break;
-						case PAD_LEFT:
-							key = LEFT;
-							break;
-						case PAD_RIGHT:
-							key = RIGHT;
-							break;
-						case PAD_DOT:
-							key = DELETE;
-							break;
-						default:
-							break;
+						else{
+							switch(key) {
+							case PAD_HOME:
+								key = HOME;
+								break;
+							case PAD_END:
+								key = END;
+								break;
+							case PAD_PAGEUP:
+								key = PAGEUP;
+								break;
+							case PAD_PAGEDOWN:
+								key = PAGEDOWN;
+								break;
+							case PAD_INS:
+								key = INSERT;
+								break;
+							case PAD_UP:
+								key = UP;
+								break;
+							case PAD_DOWN:
+								key = DOWN;
+								break;
+							case PAD_LEFT:
+								key = LEFT;
+								break;
+							case PAD_RIGHT:
+								key = RIGHT;
+								break;
+							case PAD_DOT:
+								key = DELETE;
+								break;
+							default:
+								break;
+							}
 						}
+						break;
 					}
-					break;
 				}
-			}
-			key |= shift_l	? FLAG_SHIFT_L	: 0;
-			key |= shift_r	? FLAG_SHIFT_R	: 0;
-			key |= ctrl_l	? FLAG_CTRL_L	: 0;
-			key |= ctrl_r	? FLAG_CTRL_R	: 0;
-			key |= alt_l	? FLAG_ALT_L	: 0;
-			key |= alt_r	? FLAG_ALT_R	: 0;
-			key |= pad	? FLAG_PAD	: 0;
 
-			in_process(p_tty, key);
+				key |= shift_l	? FLAG_SHIFT_L	: 0;
+				key |= shift_r	? FLAG_SHIFT_R	: 0;
+				key |= ctrl_l	? FLAG_CTRL_L	: 0;
+				key |= ctrl_r	? FLAG_CTRL_R	: 0;
+				key |= alt_l	? FLAG_ALT_L	: 0;
+				key |= alt_r	? FLAG_ALT_R	: 0;
+				key |= pad      ? FLAG_PAD      : 0;
+
+				in_process(p_tty, key);
+			}
 		}
 	}
 }
 
-
 /*======================================================================*
-                           get_byte_from_kb_buf
+			    get_byte_from_kbuf
  *======================================================================*/
-PRIVATE t_8 get_byte_from_kb_buf()	/* 从键盘缓冲区中读取下一个字节 */
+PRIVATE t_8 get_byte_from_kbuf()       /* 从键盘缓冲区中读取下一个字节 */
 {
-	t_8	scan_code;
+        t_8 scan_code;
 
-	while (kb_in.count <= 0) {}	/* 等待下一个字节到来 */
+        while (kb_in.count <= 0) {}   /* 等待下一个字节到来 */
 
-	disable_int();
-	scan_code = *(kb_in.p_tail);
-	kb_in.p_tail++;
-	if (kb_in.p_tail == kb_in.buf + KB_IN_BYTES) {
-		kb_in.p_tail = kb_in.buf;
-	}
-	kb_in.count--;
-	enable_int();
-
-#ifdef __TINIX_DEBUG__
-	disp_color_str("[", MAKE_COLOR(WHITE,BLUE));
-	disp_int(scan_code);
-	disp_color_str("]", MAKE_COLOR(WHITE,BLUE));
-#endif
+        disable_int();
+        scan_code = *(kb_in.p_tail);
+        kb_in.p_tail++;
+        if (kb_in.p_tail == kb_in.buf + KB_IN_BYTES) {
+                kb_in.p_tail = kb_in.buf;
+        }
+        kb_in.count--;
+        enable_int();
 
 	return scan_code;
 }
 
-
 /*======================================================================*
-                                 kb_wait
+				 kb_wait
  *======================================================================*/
 PRIVATE void kb_wait()	/* 等待 8042 的输入缓冲区空 */
 {
@@ -324,7 +323,7 @@ PRIVATE void kb_wait()	/* 等待 8042 的输入缓冲区空 */
 
 
 /*======================================================================*
-                                 kb_ack
+				 kb_ack
  *======================================================================*/
 PRIVATE void kb_ack()
 {
@@ -332,12 +331,11 @@ PRIVATE void kb_ack()
 
 	do {
 		kb_read = in_byte(KB_DATA);
-	} while (kb_read =! KB_ACK);
+	} while (kb_read != KB_ACK);
 }
 
-
 /*======================================================================*
-                                 set_leds
+				 set_leds
  *======================================================================*/
 PRIVATE void set_leds()
 {

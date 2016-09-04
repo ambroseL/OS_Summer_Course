@@ -31,13 +31,13 @@ PUBLIC void	restart();
 PUBLIC void	Terminal();
 PUBLIC void	TestB();
 PUBLIC void	TestC();
-PUBLIC void TestD();
-PUBLIC void TestE();
-PUBLIC void clearScreen();
-PUBLIC void goBangGameStart();
-PUBLIC void calculator();
-PUBLIC void calendar();
-PUBLIC void taskManager();
+PUBLIC void 	TestD();
+PUBLIC void 	TestE();
+PUBLIC void 	clearScreen();
+PUBLIC void 	Game();
+PUBLIC void 	calculator();
+PUBLIC void 	calendar();
+PUBLIC void 	taskManager();
 
 /* i8259.c */
 PUBLIC void	put_irq_handler(int iIRQ, t_pf_irq_handler handler);

@@ -125,14 +125,14 @@ PUBLIC int linx_main()
 	//修改这里的优先级和ticks
 	proc_table[0].priority = 15;
 	proc_table[1].priority =  5;
-	proc_table[2].priority =  5;
+	proc_table[2].priority =  2;
 	proc_table[3].priority =  5;
 	proc_table[4].priority =  2;
 	proc_table[5].priority =  10;
 	proc_table[6].priority =  20;
-	proc_table[7].priority =  8;
-	proc_table[8].priority = 8;
-	proc_table[9].priority = 8;
+	proc_table[7].priority =  10;
+	proc_table[8].priority = 10;
+	proc_table[9].priority = 10;
 
 	//对优先队列初始化
 	thirdLen=0;
@@ -186,19 +186,15 @@ void clearScreen()
 
 void help()
 {
-	printf("           ==============================================\n");
-	printf("                    Designed By Lidong Liu               \n");
-	printf("           ==============================================\n");
-	printf("\n");
 	printf("      ==========================================================\n");
 	printf("      =====  help         --------  show the help menu     =====\n");
 	printf("      =====  clear        --------  clear screen           =====\n");	
-	printf("      =====  show         --------  show the process state =====\n");
-	printf("      =====  goodbye      --------  shut down the computer =====\n");
+	printf("      =====  show         --------  show the process info  =====\n");
+	printf("      =====  shutdown     --------  shut down the computer =====\n");
 	printf("      =====  F1           --------  return main menu       =====\n");
 	printf("      =====  F2           --------  show the process run   =====\n");
 	printf("      =====  F3           --------  calculator             =====\n");
-	printf("      =====  F4           --------  gobang game            =====\n");
+	printf("      =====  F4           --------  Game                   =====\n");
 	printf("      =====  F5           --------  calendar               =====\n");
 	printf("      =====  F6           --------  task manager           =====\n");
 	printf("      ==========================================================\n");
@@ -206,27 +202,39 @@ void help()
 }
 
 /*======================================================================*
-                            show progress
+                            show process
  *======================================================================*/
 
 void show()
 {
 	PROCESS* p;
 	int i;
+	printf("==========================================================================\n");	
+	printf("procs_ID      proc_name      proc_priority      queque_ID      procs_state\n");
+	printf("--------------------------------------------------------------------------\n");
 	for (i=0; i<NR_TASKS+NR_PROCS;i++)
 	{
 		p=&proc_table[i];
-		printf("process%d:",p->pid);
+		printf("process%d:      ",p->pid);
+		int len = 12;
+		printf("%s",p->name);
+		len = len-strlen(p->name)+5;
+		while(len--)
+			printf(" ");
+		printf("%d                ",p->priority);
+		if(p->priority<10) printf(" ");
+		printf("%d            ",p->whichQueue);
+		
 		switch (p->state)
 		{
 		case kRUNNABLE:
-			printf("    Runnable\n");
+			printf("Runnable\n");
 			break;
 		case kRUNNING:
-			printf("    Running\n");
+			printf("Running\n");
 			break;
 		case kREADY:
-			printf("    Ready\n");
+			printf("Ready\n");
 			break;
 		}
 	}
@@ -287,9 +295,9 @@ void dealWithCommand(char* command)
 			show();
 			return ;
 		}
-		if (strcmp(command,"goodbye")==0)
+		if (strcmp(command,"shutdown")==0)
 		{
-			displayGoodBye();
+			shutdown();
 			while(1);
 		}
 		char str[10] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0','\0'};
@@ -364,8 +372,6 @@ void TestB()
 	}
 }
 
-
-
 /*======================================================================*
                                TestC
  *======================================================================*/
@@ -378,6 +384,9 @@ void TestC()
 	}
 }
 
+/*======================================================================*
+                               TestD
+ *======================================================================*/
 void TestD()
 {
 	int i=0;
@@ -388,6 +397,9 @@ void TestD()
 	}
 }
 
+/*======================================================================*
+                               TestE
+ *======================================================================*/
 void TestE()
 {
 	int i=0;
@@ -398,436 +410,10 @@ void TestE()
 	}
 }
 
-/*======================================================================*
-				goBangGame
-*=======================================================================*/
 
-char gameMap[15][15];
-TTY *goBangGameTty=tty_table+3;
-
-void readTwoNumber(int* x,int* y)
-{
-	int i=0;
-	*x=0;
-	*y=0;
-	for (i=0; i<goBangGameTty->len && goBangGameTty->str[i]==' '; i++);
-	for (; i<goBangGameTty->len && goBangGameTty->str[i]!=' '  && goBangGameTty->str[i]!='\n'; i++)
-	{
-		*x=(*x)*10+(int) goBangGameTty->str[i]-48;
-	}
-	for (i; i<goBangGameTty->len && goBangGameTty->str[i]==' '; i++);
-	for (; i<goBangGameTty->len && goBangGameTty->str[i]!=' ' && goBangGameTty->str[i]!='\n'; i++)
-	{
-		*y=(*y)*10+(int) goBangGameTty->str[i]-48;
-	}
-}
-
-int max(int x,int y)
-{
-	return x>y?x:y;
-}
-
-int selectPlayerOrder()
-{
-	printf("o player\n");
-	printf("* computer\n");
-	printf("who play first?[1/user  other/computer]");
-	openStartScanf(goBangGameTty);
-	while (goBangGameTty->startScanf) ;
-	if (strcmp(goBangGameTty->str,"1")==0) return 1;
-	else return 0;
-}
-
-void displayGameState()
-{
-	sys_clear(goBangGameTty);
-	int n=15;
-	int i,j;
-	for (i=0; i<=n; i++)
-	{
-		if (i<10) printf("%d   ",i);
-		else printf("%d  ",i);
-	}
-	printf("\n");
-	for (i=0; i<n; i++)
-	{
-		if (i<9) printf("%d   ",i+1);
-		else printf("%d  ",i+1);
-		for (j=0; j<n; j++)
-		{
-			if (j<10) printf("%c   ",gameMap[i][j]);
-			else printf("%c   ",gameMap[i][j]);
-		}
-		printf("\n");
-	}
-
-}
-
-int checkParameter(int x, int y)	//检查玩家输入的参数是否正确
-{
-	int n=15;
-	if (x<0 || y<0 || x>=n || y>=n) return 0;
-	if (gameMap[x][y]!='_') return 0;
-	return 1;
-}
-
-//更新的位置为x，y，因此 只要检查坐标为x，y的位置
-int win(int x,int y)		//胜利返回1    否则0（目前无人获胜）
-{
-	int n=15;
-	int i,j;
-	int gameCount;
-	//左右扩展
-	gameCount=1;
-	for (j=y+1; j<n; j++)
-	{
-		if (gameMap[x][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	for (j=y-1; j>=0; j--)
-	{
-		if (gameMap[x][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	if (gameCount>=5) return 1;
-
-	//上下扩展
-	gameCount=1;
-	for (i=x-1; i>0; i--)
-	{
-		if (gameMap[i][y]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	for (i=x+1; i<n; i++)
-	{
-		if (gameMap[i][y]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	if (gameCount>=5) return 1;
-
-	//正对角线扩展
-	gameCount=1;
-	for (i=x-1,j=y-1; i>=0 && j>=0; i--,j--)
-	{
-		if (gameMap[i][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	for (i=x+1,j=y+1; i<n && j<n; i++,j++)
-	{
-		if (gameMap[i][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	if (gameCount>=5) return 1;
-
-	//负对角线扩展
-	gameCount=1;
-	for (i=x-1,j=y+1; i>=0 && j<n; i--,j++)
-	{
-		if (gameMap[i][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	for (i=x+1,j=y-1; i<n && j>=0; i++,j--)
-	{
-		if (gameMap[i][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	if (gameCount>=5) return 1;
-
-	return 0;
-}
-
-void free1(int x,int y1,int y2,int* ff1,int* ff2)
-{
-	int n=15;
-	int i;
-	int f1=0,f2=0;
-	for (i=y1; i>=0; i++)
-	{
-		if (gameMap[x][i]=='_') f1++;
-		else break;
-	}
-	for (i=y2; i<n; i++)
-	{
-		if (gameMap[x][i]=='_') f2++;
-		else break;
-	}
-	*ff1=f1;
-	*ff2=f2;
-}
-
-void free2(int x1,int x2,int y,int *ff1,int *ff2)
-{
-	int n=15;
-	int i;
-	int f1=0,f2=0;
-	for (i=x1; i>=0; i--)
-	{
-		if (gameMap[i][y]=='_') f1++;
-		else break;
-	}
-	for (i=x2; i<n; i++)
-	{
-		if (gameMap[i][y]=='_') f2++;
-		else break;
-	}
-	*ff1=f1;
-	*ff2=f2;
-}
-
-void free3(int x1,int y1,int x2,int y2,int *ff1,int *ff2)
-{
-	int n=15;
-	int x,y;
-	int f1=0;
-	int f2=0;
-	for (x=x1,y=y1; 0<=x && 0<=y; x--,y--)
-	{
-		if (gameMap[x][y]=='_') f1++;
-		else break;
-	}
-	for (x=x2,y=y2; x<n &&  y<n; x++,y++)
-	{
-		if (gameMap[x][y]=='_') f2++;
-		else break;
-	}
-	*ff1=f1;
-	*ff2=f2;
-}
-
-void free4(int x1,int y1,int x2,int y2,int *ff1,int *ff2)
-{
-	int n=15;
-	int x,y;
-	int f1=0,f2=0;
-	for (x=x1,y=y1; x>=0 && y<n; x--,y++)
-	{
-		if (gameMap[x][y]=='_') f1++;
-		else break;
-	}
-	for (x=x2,y=y2; x<n && y>=0; x++,y--)
-	{
-		if (gameMap[x][y]=='_') f2++;
-		else break;
-	}
-	*ff1=f1;
-	*ff2=f2;
-}
-
-int getPossibleByAD(int attack,int defence,int attackFree1,int attackFree2,int defenceFree1,int defenceFree2)
-{
-	if (attack>=5) return 20;						//5攻击
-	if (defence>=5) return 19;						//5防御
-	if (attack==4 && (attackFree1>=1 && attackFree2>=1)) return 18;		//4攻击 2边
-	if (attack==4 && (attackFree1>=1 || attackFree2>=1)) return 17;		//4攻击 1边
-	if (defence==4 && (defenceFree1>=1 || defenceFree2>=1)) return 16;	//4防御
-	if (attack==3 && (attackFree1>=2 && attackFree2>=2)) return 15;		//3攻击 2边
-	if (defence==3 && (defenceFree1>=2 && defenceFree2>=2)) return 14;	//3防御 2边
-	if (defence==3 && (defenceFree1>=2 || defenceFree2>=2)) return 13;	//3防御 1边
-	if (attack==3 && (attackFree1>=2 || attackFree2>=2)) return 12;		//3攻击 1边
-	if (attack==2 && (attackFree1>=3 && attackFree2>=3)) return 11;		//2攻击 2边
-	if (defence==2 && defenceFree1+defenceFree2>=3) return 10;	//2防御 2边
-	if (defence==2 && defenceFree1+defenceFree2>=3) return 9;		//2防御 1边
-	if (attack==1 && attackFree1+attackFree2>=4) return 8;
-	if (defence==1 && defenceFree1+defenceFree2>=4) return 7;
-	return 6;
-}
-
-int getPossible(int x,int y)
-{
-	int n=15;
-	int attack;
-	int defence;
-	int attackFree1;
-	int defenceFree1;
-	int attackFree2;
-	int defenceFree2;
-	int possible=-100;
-
-	//左右扩展
-	int al,ar;
-	int dl,dr;
-	//横向攻击
-	for (al=y-1; al>=0; al--)
-	{
-		if (gameMap[x][al]!='*') break;
-	}
-	for (ar=y+1; ar<n; ar++)
-	{
-		if (gameMap[x][ar]!='*') break;
-	}
-	//横向防守
-	for (dl=y-1; dl>=0; dl--)
-	{
-		if (gameMap[x][dl]!='o') break;
-	}
-	for (dr=y+1; dr<n; dr++)
-	{
-		if (gameMap[x][dr]!='o') break;
-	}
-	attack=ar-al-1;
-	defence=dr-dl-1;
-	free1(x,al,ar,&attackFree1,&attackFree2);
-	free1(x,dl,dr,&defenceFree1,&defenceFree2);
-	possible=max(possible,getPossibleByAD(attack,defence,attackFree1,attackFree2,defenceFree1,defenceFree2));
-
-	//竖向进攻
-	for (al=x-1; al>=0; al--)
-	{
-		if (gameMap[al][y]!='*') break;
-	}
-	for (ar=x+1; ar<n; ar++)
-	{
-		if (gameMap[ar][y]!='*') break;
-	}
-	//竖向防守
-	for (dl=x-1; dl>=0; dl--)
-	{
-		if (gameMap[dl][y]!='o') break;
-	}
-	for (dr=x+1; dr<n; dr++)
-	{
-		if (gameMap[dr][y]!='o') break;
-	}
-	attack=ar-al-1;
-	defence=dr-dl-1;
-	free2(al,ar,y,&attackFree1,&attackFree2);
-	free2(dl,dr,y,&defenceFree1,&defenceFree2);
-	possible=max(possible,getPossibleByAD(attack,defence,attackFree1,attackFree2,defenceFree1,defenceFree2));
-
-	//正对角线进攻
-	int al1,al2,ar1,ar2;
-	int dl1,dl2,dr1,dr2;
-	for (al1=x-1,al2=y-1; al1>=0 && al2>=0; al1--,al2--)
-	{
-		if (gameMap[al1][al2]!='*') break;
-	}
-	for (ar1=x+1,ar2=y+1; ar1<n && ar2<n; ar1++,ar2++)
-	{
-		if (gameMap[ar1][ar2]!='*') break;
-	}
-	//正对角线防守
-	for (dl1=x-1,dl2=y-1; dl1>=0 && dl2>=0; dl1--,dl2--)
-	{
-		if (gameMap[dl1][dl2]!='o') break;
-	}
-	for (dr1=x+1,dr2=y+1; dr1<n && dr2<n; dr1++,dr2++)
-	{
-		if (gameMap[dr1][dr2]!='o') break;
-	}
-	attack=ar1-al1-1;
-	defence=dr1-dl1-1;
-	free3(al1,al2,ar1,ar2,&attackFree1,&attackFree2);
-	free3(dl1,dl2,dr1,dr2,&defenceFree1,&defenceFree2);
-	possible=max(possible,getPossibleByAD(attack,defence,attackFree1,attackFree1,defenceFree1,defenceFree2));
-
-	//负对角线进攻
-	for (al1=x-1,al2=y+1; al1>=0 && al2<n; al1--,al2++)
-	{
-		if (gameMap[al1][al2]!='*') break;
-	}
-	for (ar1=x+1,ar2=y-1; ar1<n && ar2>=0; ar1++,ar2--)
-	{
-		if (gameMap[ar1][ar2]!='*') break;
-	}
-	//负对角线防守
-	for (dl1=x-1,dl2=y+1; dl1>=0 && dl2<n; dl1--,dl2++)
-	{
-		if (gameMap[dl1][dl2]!='o') break;
-	}
-	for (dr1=x+1,dr2=y-1; dr1<n && dr2>=0; dr1++,dr2--)
-	{
-		if (gameMap[dr1][dr2]!='o') break;
-	}
-	attack=ar1-al1-1;
-	defence=dr1-dl1-1;
-	free4(al1,al2,ar1,ar2,&attackFree1,&attackFree2);
-	free4(dl1,dl2,dr1,dr2,&defenceFree1,&defenceFree2);
-	possible=max(possible,getPossibleByAD(attack,defence,attackFree1,attackFree2,defenceFree1,defenceFree2));
-	return possible;
-}
-
-
-void goBangGameStart()
-{
-	int playerStep=0;
-	int computerStep=0;
-	int n=15;
-	int i,j;
-	while (1)
-	{
-	for (i=0; i<n; i++)
-		for (j=0; j<n; j++)
-			gameMap[i][j]='_';
-
-
-	if (selectPlayerOrder()==0)
-	{
-		gameMap[n>>1][n>>1]='*';
-		displayGameState();
-		printf("[computer step:%d]%d,%d\n",++computerStep,(n>>1)+1,(n>>1)+1);
-	}
-	else
-	{
-		displayGameState();
-	}
-
-	while (1)
-	{
-		int x,y;
-		while (1)
-		{
-			printf("[player step:%d]",++playerStep);
-			//scanf("%d%d",&x,&y);
-			openStartScanf(goBangGameTty);
-			while (goBangGameTty->startScanf) ;
-			readTwoNumber(&x,&y);
-			x--,y--;
-			if ( checkParameter(x,y) )
-			{
-				gameMap[x][y]='o';
-				break;
-			}
-			else
-			{
-				playerStep--;
-				printf("the position you put error\n");
-			}
-		}
-		if (win(x,y))
-		{
-			displayGameState();
-			printf("Congratulation you won the game\n");
-			break;
-		}
-		int willx,willy,winPossible=-100;
-		for (i=0; i<n; i++)
-			for (j=0; j<n; j++)
-			{
-				if (gameMap[i][j]=='_')
-				{
-					int possible=getPossible(i,j);
-					if (possible>=winPossible)
-					{
-						willx=i; willy=j;
-						winPossible=possible;
-					}
-				}
-			}
-			gameMap[willx][willy]='*';
-			displayGameState();
-			printf("[computer step:%d]%d,%d\n",++computerStep,willx+1,willy+1);
-			if (win(willx,willy))
-			{
-				printf("Sorry you lost the game\n");
-				break;
-			}
-	}
-	}
-
-}
 
 /*======================================================================*
-				calculator
+								calculator
 *=======================================================================*/
 
 TTY *calculatorTty=tty_table+2;
@@ -969,11 +555,40 @@ double term()
 	return temp;
 }
 
-
+void printNum(double d)
+{
+	int m = d;
+	int digit = m;
+	d-=m;
+	int precision = 3;
+	char num[precision+1];
+	num[precision] = '\0';
+	int i = 0;
+	while(precision--)
+	{
+		d*=10;
+		m = d;
+		num[i++] = m+'0';
+		d-=m;
+	}
+	int flag = 0;
+	if(d*10>5) 
+		flag = 1;
+	while(--i&&flag)
+	{
+		if(num[i]=='9')
+			num[i] = '0';
+		else {
+			num[i]++;
+			flag = 0;
+		}
+	}
+	printf("%d.%s\n",digit,num);
+}
 
 void calculator()
 {
-	printf("Hello \n This is a calculator application!\n");
+	printf("Hello! This is a calculator application!\n");
 	while(1){
 		printf("please enter an equation:  \n");
 		openStartScanf(calculatorTty);
@@ -984,32 +599,69 @@ void calculator()
 		if (token == 'q')
 			break;
 		double result = exp();
-		int int_res = result;
-		char num[100];
-		int j =0;
-		num[j++] = int_res +'0';
-		result-=int_res;
-		if(result>1e-10) 
-		{
-			num[j++] = '.';
-			while(result>1e-10)
-			{
-				result*=10;
-				int_res = result;
-				num[j++] = int_res +'0';
-				result -= int_res;
-			}
-		}
-		num[j] = '\0';
+		
 		if (token == '\0')
-			printf("%d\n",result);
+		{
+			printNum(result);
+		}
 		else
 			error();
 	}
 	printf("Bye! \n");
 }
+
+
+
 /*======================================================================*
-				Calendar
+						Game
+*=======================================================================*/
+
+
+TTY *GameTty=tty_table+3;
+
+void readNumber(int* x)
+{
+	openStartScanf(GameTty);
+	while (GameTty->startScanf);
+	int i=0;
+	*x=0;
+	for (i=0; i<GameTty->len && GameTty->str[i]==' '; i++);
+	for (; i<GameTty->len && GameTty->str[i]!=' ' && GameTty->str[i]!='\n'; i++)
+	{
+		*x=(*x)*10+(int) GameTty->str[i]-48;
+	}
+}
+
+
+void Game()
+{	
+	while (1)
+	{
+		printf("There is a number between 1 and 1000 , guess what is it according to the tips.\n");
+		int iTarget,iNumber;
+		
+		iTarget = (int)(get_ticks() * 2.7182818) % 1000 + 1;//利用系统时钟函数产生随机数	
+		do
+		{
+			printf("enter your number:");			
+			readNumber(&iNumber);
+			if(iNumber<iTarget)
+				printf("What you guess is smaller than the target.\n");
+			else if(iNumber>iTarget)
+				printf("What you guess is bigger than the target.\n");
+			else{
+				printf("Congratulations.You are right.\n");
+				printf("10 Seconds later another game start.\n");
+				clearScreen();
+				milli_delay(10000);
+			}
+		}while(iNumber != iTarget);
+	}
+}
+
+
+/*======================================================================*
+								Calendar
 *=======================================================================*/
 
 TTY *calendarTty=tty_table+4;
@@ -1034,7 +686,7 @@ void readTwoNumberInCalendar(int* x,int* y)
 			
 void calendar()
 {
-	printf("Hello \n This is a calendar application, you can use it as follows!\n");	
+	printf("Hello! This is a calendar application, you can use it as follows!\n");	
 	int year, month, x, y;
 	while (1)
 	{
@@ -1092,69 +744,82 @@ int duo(int year)
 int rili(int year,int month)
 {
 	int day,tian,preday,strday;
-	printf("***************%dmonth %dyear*********\n",month,year);
-	printf(" SUN MON TUE WED THU FRI SAT\n");
+	char monthStr[10];
 	switch(month)
 	{
 		case 1:
 		tian=31;
 		preday=0;
+		strcpy(monthStr,"January");
 		break;
 		case 2:
 		tian=28;
 		preday=31;
+		strcpy(monthStr,"Febrary");
 		break;
 		case 3:
 		tian=31;
 		preday=59;
+		strcpy(monthStr,"March");
 		break;
 		case 4:
 		tian=30;
 		preday=90;
+		strcpy(monthStr,"April");
 		break;
 		case 5:
 		tian=31;
 		preday=120;
+		strcpy(monthStr,"May");
 		break;
 		case 6:
 		tian=30;
 		preday=151;
+		strcpy(monthStr,"June");
 		break;
 		case 7:
 		tian=31;
 		preday=181;
+		strcpy(monthStr,"July");
 		break;
 		case 8:
 		tian=31;
 		preday=212;
+		strcpy(monthStr,"August");
 		break;
 		case 9:
 		tian=30;
 		preday=243;
+		strcpy(monthStr,"September");
 		break;
 		case 10:
 		tian=31;
 		preday=273;
+		strcpy(monthStr,"October");
 		break;
 		case 11:
 		tian=30;
 		preday=304;
+		strcpy(monthStr,"November");
 		break;
 		default:
 		tian=31;
 		preday=334;
+		strcpy(monthStr,"December");
 	}
 	if(duo(year)&&month>2)
 	preday++;
 	if(duo(year)&&month==2)
 	tian=29;
 	day=((year-1)*365+(year-1)/4-(year-1)/100+(year-1)/400+preday+1)%7;
+	printf("************%s.%d***********\n",monthStr,year);
+	printf(" SUN MON TUE WED THU FRI SAT\n");
 	print(day,tian);
 }
 
 
 /*======================================================================*
-				Task Manager
+								Task Manager
 *=======================================================================*/
 TTY *taskMngTty=tty_table+5;
 
@@ -1172,15 +837,16 @@ void dealMngCmd(char* command)
 			{
 				printf("No found this process!!");
 			}
-			else if (number==0 || number==8)
+			else if (number==0 || number==1)
 			{
-				printf("You do not have sufficient privileges\n");
+				printf("You do not have sufficient power\n");
 			}
 			else if (2<=number && number <=7)
 			{
 				proc_table[number].state=kREADY;
 				printf("kill process %d successful\n",number);
-			}
+			}else
+			printf("no such process!\n");
 			return ;
 		}
 		if (strcmp(str,"start")==0)
@@ -1208,9 +874,9 @@ void dealMngCmd(char* command)
 
 void taskManager()
 {	
-	printf("Hello \n  you can manager process as follows!\n");
-	printf("Enter \"kill 2~7\" to kill process 2~7\n");	
-	printf("Enter \"start 2~7\" to start process 2~7\n");	
+	printf("Hello! You can manager process as follows!\n");
+	printf("Enter \"kill + number\" to kill process\n");	
+	printf("Enter \"start + number\" to start process\n");	
 	
 	while(1)
 	{
@@ -1356,29 +1022,7 @@ void DisPlayAnimation()//displayed when OS starts
 	disp_color_str("                                                \n",0x33);
 	disp_color_str("                                                \n",0x33);
 	milli_delay(1);
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////	
-	clearScreen();
-	disp_str("                                                \n");
-	disp_str("                                                \n");
-	disp_str("                  ");
-	disp_color_str(" ",0xFF);
-	disp_str("                              \n");
-	disp_str("                  ");
-	disp_color_str(" ",0xFF);
-	disp_str("                              \n");
-	disp_str("                  ");
-	disp_color_str(" ",0xFF);
-	disp_str("                              \n");
-	disp_str("                  ");
-	disp_color_str(" ",0xFF);
-	disp_str("                              \n");
-	disp_color_str("                                                \n",0x33);
-	disp_color_str("                                                \n",0x33);
-	disp_color_str("                                                \n",0x33);
-	disp_color_str("                                                \n",0x33);
-	disp_color_str("                                                \n",0x33);
-	milli_delay(1);
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////	
 	clearScreen();
@@ -1521,13 +1165,13 @@ void DisPlayAnimation()//displayed when OS starts
 	milli_delay(1);
 
 
-	milli_delay(10);	
+	milli_delay(5);	
 	clearScreen();
 
 }
 
 /*======================================================================*
-			display welcome
+							display welcome
 *=======================================================================*/
 
 void displayWelcome()
@@ -1540,15 +1184,27 @@ void displayWelcome()
 	disp_str("                   ==========\n");
 	disp_str("========                            Created By                       ========\n");
 	disp_str("========                            Lidong Liu                       ========\n");
-	disp_str("========                      Enter [help] to get help               ========\n");
 	disp_str("=============================================================================\n");
+	disp_str("    ===============================================================\n");
+	disp_str("       =====  help         --------  show the help menu     =====\n");
+	disp_str("       =====  clear        --------  clear screen           =====\n");	
+	disp_str("       =====  show         --------  show the process info  =====\n");
+	disp_str("       =====  shutdown     --------  shut down the computer =====\n");
+	disp_str("       =====  F1           --------  return main menu       =====\n");
+	disp_str("       =====  F2           --------  show the process run   =====\n");
+	disp_str("       =====  F3           --------  calculator             =====\n");
+	disp_str("       =====  F4           --------  Game                   =====\n");
+	disp_str("       =====  F5           --------  calendar               =====\n");
+	disp_str("       =====  F6           --------  task manager           =====\n");
+	disp_str("    ===============================================================\n");
+	disp_str("\n");
 }
 
 /*======================================================================*
-			display goodbye
+									shutdown
 *=======================================================================*/
 
-void displayGoodBye()
+void shutdown()
 {
 	clearScreen();
 	disp_str("\n\n\n\n\n");
