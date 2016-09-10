@@ -21,14 +21,14 @@ PUBLIC	PROCESS	proc_table[NR_TASKS + NR_PROCS];//Ω¯≥Ã±Ì
 PUBLIC	TASK	task_table[NR_TASKS] = {{task_tty, STACK_SIZE_TTY, "tty"}};
 
 PUBLIC	TASK	user_proc_table[NR_PROCS] = {	{Terminal, STACK_SIZE_TERMINAL, "Terminal"},
+						{calculator, STACK_SIZE_TESTE, "Calculator"},
+						{Game,STACK_SIZE_GAME,"Game"},
+						{calendar,STACK_SIZE_TESTE,"Calendar"},
+						{taskManager,STACK_SIZE_TSKMNG,"TaskManager"},
 						{TestB, STACK_SIZE_TESTB, "TestB"},
 						{TestC, STACK_SIZE_TESTC, "TestC"},
 						{TestD, STACK_SIZE_TESTD, "TestD"},
-						{TestE, STACK_SIZE_TESTE, "TestE"},
-						{calculator, STACK_SIZE_TESTE, "calculator"},
-						{Game,STACK_SIZE_GAME,"Game"},
-						{calendar,STACK_SIZE_TESTE,"calendar"},
-						{taskManager,STACK_SIZE_TSKMNG,"taskManager"}};
+						{TestE, STACK_SIZE_TESTE, "TestE"}};
 
 
 

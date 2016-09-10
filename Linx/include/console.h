@@ -30,3 +30,8 @@ typedef struct s_console
 
 
 #endif /* _TINIX_CONSOLE_H_ */
+unsigned int	crtc_start; /* set CRTC start addr reg */
+unsigned int	orig;	    /* start addr of the console */
+unsigned int	con_size;   /* how many words does the console have */
+unsigned int	cursor;
+int		is_full;

@@ -68,13 +68,13 @@ PUBLIC void schedule()
 	{
 		if (firstLen-firstHead>0)
 		{		
-			p_proc_ready=firstQueue[firstHead];	//第一个队列按照先到先得
+			p_proc_ready=firstQueue[firstHead];	//第一级队列采用先到先得处理进程
 			greatest_priority=p_proc_ready->ticks;
 			break;
 		}
 		else if (secondLen+firstLen - firstHead >0)
 		{
-		for (i=0; i<secondLen; i++)		//the second queue use the priority algorithm
+		for (i=0; i<secondLen; i++)		//第二级队列采用优先级调度
 			{
 				p=secondQueue[i];
 				if (p->state!=kRUNNABLE || p->ticks==0) continue;
@@ -86,7 +86,7 @@ PUBLIC void schedule()
 			}		
 		}					
 		else{
-		for (i=0; i<thirdLen; i++)		//the third queue still use the priority algorithm
+		for (i=0; i<thirdLen; i++)		//第三级队列采用优先级调度
 			{
 				p=thirdQueue[i];
 				if (p->state!=kRUNNABLE || p->ticks==0) continue;

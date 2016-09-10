@@ -26,8 +26,6 @@ PRIVATE void	init_tty(TTY* p_tty);
 PRIVATE void	tty_do_read(TTY* p_tty);
 PRIVATE void	tty_do_write(TTY* p_tty);
 PRIVATE void	put_key(TTY* p_tty, t_32 key);
-
-PRIVATE void 	clearTempStr(TTY* p_tty);
 PRIVATE void	putToTemp(TTY* p_tty,t_32 key);
 PRIVATE void 	putToStr(TTY* p_tty);
 

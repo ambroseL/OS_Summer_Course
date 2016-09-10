@@ -2,7 +2,7 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                             main.c
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-                                                    Forrest Yu, 2005
+                                                    Lidong Liu,2016
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 #include "type.h"
@@ -122,17 +122,18 @@ PUBLIC int linx_main()
 		selector_ldt += 1 << 3;
 	}
 
-	//修改这里的优先级和ticks
+	
 	proc_table[0].priority = 15;
-	proc_table[1].priority =  5;
-	proc_table[2].priority =  2;
-	proc_table[3].priority =  5;
-	proc_table[4].priority =  2;
+	proc_table[1].priority =  20;
+	proc_table[2].priority =  10;
+	proc_table[3].priority =  10;
+	proc_table[4].priority =  10;
 	proc_table[5].priority =  10;
-	proc_table[6].priority =  20;
-	proc_table[7].priority =  10;
-	proc_table[8].priority = 10;
+	proc_table[6].priority =  2;
+	proc_table[7].priority =  5;
+	proc_table[8].priority = 2;
 	proc_table[9].priority = 10;
+
 
 	//对优先队列初始化
 	thirdLen=0;
@@ -143,14 +144,14 @@ PUBLIC int linx_main()
 	}
 	//指定控制台
 	proc_table[1].nr_tty = 0;
-	proc_table[2].nr_tty = 1;
-	proc_table[3].nr_tty = 1;
-	proc_table[4].nr_tty = 1;
-	proc_table[5].nr_tty = 1;
-	proc_table[6].nr_tty = 2;
-	proc_table[7].nr_tty = 3;
-	proc_table[8].nr_tty = 4;
-	proc_table[9].nr_tty = 5;
+	proc_table[2].nr_tty = 2;
+	proc_table[3].nr_tty = 3;
+	proc_table[4].nr_tty = 4;
+	proc_table[5].nr_tty = 5;
+	proc_table[6].nr_tty = 1;
+	proc_table[7].nr_tty = 1;
+	proc_table[8].nr_tty = 1;
+	proc_table[9].nr_tty = 1;
 
 	k_reenter	= 0;
 	ticks		= 0;
@@ -163,6 +164,11 @@ PUBLIC int linx_main()
 
 	while(1){}
 }
+
+
+
+
+
 
 /*======================================================================*
                             clearScreen
@@ -179,6 +185,10 @@ void clearScreen()
 	disp_pos=0;
 	
 }
+
+
+
+
 
 /*======================================================================*
                             help
@@ -282,7 +292,7 @@ void dealWithCommand(char* command)
 		if (strcmp(command,"clear")==0)
 		{
 			clearScreen();
-			sys_clear(tty_table);
+			clearTty(tty_table);
 			return ;
 		}
 		if (strcmp(command,"help")==0)
@@ -358,7 +368,7 @@ void Terminal()
 		dealWithCommand(p_tty->str);
 	}
 }
-
+TTY *testTty = tty_table+1;
 
 /*======================================================================*
                                TestB
@@ -367,6 +377,7 @@ void TestB()
 {
 	int i = 0;
 	while(1){
+		detectTty(testTty);
 		printf("B");
 		milli_delay(1000);
 	}
@@ -379,6 +390,7 @@ void TestC()
 {
 	int i = 0;
 	while(1){
+		detectTty(testTty);		
 		printf("C");
 		milli_delay(1000);
 	}
@@ -392,6 +404,7 @@ void TestD()
 	int i=0;
 	while (1)
 	{
+		detectTty(testTty);		
 		printf("D");
 		milli_delay(1000);
 	}
@@ -405,10 +418,13 @@ void TestE()
 	int i=0;
 	while (1)
 	{
+		detectTty(testTty);		
 		printf("E");
 		milli_delay(1000);
 	}
 }
+
+
 
 
 
@@ -555,12 +571,16 @@ double term()
 	return temp;
 }
 
-void printNum(double d)
+void printNum(double d,int precision)
 {
+	if(d<0)
+	{
+		d=-d;
+		printf("-");
+	}	
 	int m = d;
 	int digit = m;
 	d-=m;
-	int precision = 3;
 	char num[precision+1];
 	num[precision] = '\0';
 	int i = 0;
@@ -590,6 +610,7 @@ void calculator()
 {
 	printf("Hello! This is a calculator application!\n");
 	while(1){
+		detectTty(calculatorTty);
 		printf("please enter an equation:  \n");
 		openStartScanf(calculatorTty);
 		while (calculatorTty->startScanf) ;
@@ -639,11 +660,11 @@ void Game()
 	{
 		printf("There is a number between 1 and 1000 , guess what is it according to the tips.\n");
 		int iTarget,iNumber;
-		
-		iTarget = (int)(get_ticks() * 2.7182818) % 1000 + 1;//利用系统时钟函数产生随机数	
+		iTarget = rand()% 1000 + 1;//利用系统时钟函数产生随机数						
 		do
-		{
-			printf("enter your number:");			
+		{			
+			detectTty(GameTty);			
+			printf("enter your number:%d\n",iTarget);								
 			readNumber(&iNumber);
 			if(iNumber<iTarget)
 				printf("What you guess is smaller than the target.\n");
@@ -652,8 +673,8 @@ void Game()
 			else{
 				printf("Congratulations.You are right.\n");
 				printf("10 Seconds later another game start.\n");
-				clearScreen();
-				milli_delay(10000);
+				milli_delay(1);	
+				clearTty(GameTty);			
 			}
 		}while(iNumber != iTarget);
 	}
@@ -690,6 +711,7 @@ void calendar()
 	int year, month, x, y;
 	while (1)
 	{
+		detectTty(calendarTty);		
 		printf("Please input the year and month: ");
 		openStartScanf(calendarTty);
 		while (calendarTty->startScanf) ;
@@ -819,7 +841,7 @@ int rili(int year,int month)
 
 
 /*======================================================================*
-								Task Manager
+				Task Manager
 *=======================================================================*/
 TTY *taskMngTty=tty_table+5;
 
@@ -827,6 +849,7 @@ void dealMngCmd(char* command)
 {
 	while(1)
 	{
+		detectTty(taskMngTty);		
 		strlwr(command);
 		char str[10] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0','\0'};
 		int number;
@@ -1201,21 +1224,44 @@ void displayWelcome()
 }
 
 /*======================================================================*
-									shutdown
+				shutdown
 *=======================================================================*/
 
 void shutdown()
 {
 	clearScreen();
 	disp_str("\n\n\n\n\n");
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+	disp_color_str("                             b                           \n",0x1); 	
+	disp_color_str("                             b                           \n",0x1); 	
+	disp_color_str("                             b b                         \n",0x2); 	
+	disp_color_str("                             b   b                       \n",0x2); 	
+	disp_color_str("                             b   b                       \n",0x3); 	
+	disp_color_str("                             b b                         \n",0x3); 
+	milli_delay(1);
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+	clearScreen();	
+	disp_color_str("                             b       Y   Y               \n",0x1); 	
+	disp_color_str("                             b        y  y               \n",0x1); 	
+	disp_color_str("                             b b       y y               \n",0x2); 	
+	disp_color_str("                             b   b       y               \n",0x2); 	
+	disp_color_str("                             b   b       y               \n",0x3); 	
+	disp_color_str("                             b b      yyy                \n",0x3); 
+	milli_delay(1);
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	clearScreen();	
 	disp_color_str("                             b       Y   Y     eeee      \n",0x1); 	
 	disp_color_str("                             b        y  y    e    e     \n",0x1); 	
 	disp_color_str("                             b b       y y    eeeeee     \n",0x2); 	
 	disp_color_str("                             b   b       y    e          \n",0x2); 	
 	disp_color_str("                             b   b       y    e          \n",0x3); 	
 	disp_color_str("                             b b      yyy      eeee      \n",0x3); 
+	milli_delay(1);
 	
-	disp_str("\n\n\n"); 	
+	clearScreen(); 	
 	disp_color_str("                     ---------------- Made BY -------------\n\n",0xB); 	
 	disp_color_str("                     --              Lidong Liu          --\n\n",0xF); 	
 	disp_color_str("                     -----------      Goodbye     ---------\n\n",0xD);

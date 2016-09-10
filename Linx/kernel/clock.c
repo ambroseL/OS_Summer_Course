@@ -22,12 +22,10 @@
  *======================================================================*/
 PUBLIC void clock_handler(int irq)
 {
-	//disp_str("#");
 	ticks++;
 	p_proc_ready->ticks--;
 
 	if (k_reenter != 0) {
-		//disp_str("!");
 		return;
 	}
 
@@ -51,11 +49,7 @@ PUBLIC void clock_handler(int irq)
 		thirdLen++;
 		firstHead++;
 	}
-	else
-	{
 
-		
-	}
 	p_proc_ready->state=kRUNNABLE;
 	
 	schedule();
@@ -66,7 +60,7 @@ PUBLIC void clock_handler(int irq)
  *======================================================================*/
 PUBLIC void milli_delay(int milli_sec)
 {
-	int t = get_ticks();
+
 
 	/*while(((get_ticks() - t) * 1000 / HZ) < milli_sec) {}*/
 
@@ -74,9 +68,9 @@ PUBLIC void milli_delay(int milli_sec)
 	int i = 0;
 
 	while(i<milli_sec*4000000)
-{
-	i++;
-}
+	{
+		i++;
+	}
 	return;
 
 }
@@ -95,4 +89,11 @@ PUBLIC void init_clock()
 	enable_irq(CLOCK_IRQ);				/* 让8259A可以接收时钟中断 */
 }
 
+/*======================================================================*
+                            rand
+ *======================================================================*/
+int rand()
+{
+	return (int)(sys_get_ticks() * 2.7182818); 
+}
 
