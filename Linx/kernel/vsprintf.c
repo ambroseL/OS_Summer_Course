@@ -32,14 +32,14 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 
 		switch (*fmt) {
 		case 'X':
-		case 'x':
+		case 'x'://输出十六进制数
 			itoa(tmp, *((int*)p_next_arg));
 			strcpy(p, tmp);
 			p_next_arg += 4;
 			p += strlen(tmp);
 			break;
 		case 'D':
-		case 'd':
+		case 'd'://输出整数
 		{		
 			itoa_dec(tmp, *((int*)p_next_arg));//把一整数转换为字符串
 			strcpy(p, tmp);
@@ -53,7 +53,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 			p_next_arg+=4;
 			break;
 		}
-		case 's':
+		case 's'://输出字符串
 		{
 			strcpy(p,(*((char**)p_next_arg)));
 			p += strlen(*((char**)p_next_arg));

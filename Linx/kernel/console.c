@@ -184,11 +184,16 @@ PRIVATE void flush(CONSOLE* p_con)
 {
 	if (is_current_console(p_con)) {
 		set_cursor(p_con->cursor);
-		set_video_start_addr(p_con->current_start_addr);
+		set_video_start_addr(p_con->current_start_addr);		
 	}
 }
 
-PUBLIC int sys_clear(TTY* p_tty)
+
+
+/*======================================================================*
+                           sys_clear
+*======================================================================*/
+PUBLIC int clearTty(TTY* p_tty)
 {
 	p_tty->p_console->current_start_addr = p_tty->p_console->original_addr;
 	p_tty->p_console->cursor = p_tty->p_console->original_addr;
@@ -201,4 +206,13 @@ PUBLIC int sys_clear(TTY* p_tty)
 }
 
 
+
+/*======================================================================*
+                           clearTty
+*======================================================================*/
+void detectTty(TTY* p_tty)
+{
+	if(p_tty->p_console->cursor+1>=p_tty->p_console->original_addr+p_tty->p_console->v_mem_limit)
+		clearTty(p_tty);
+}
 
