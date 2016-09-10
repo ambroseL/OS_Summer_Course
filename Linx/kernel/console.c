@@ -213,6 +213,10 @@ PUBLIC int clearTty(TTY* p_tty)
 void detectTty(TTY* p_tty)
 {
 	if(p_tty->p_console->cursor+1>=p_tty->p_console->original_addr+p_tty->p_console->v_mem_limit)
+<<<<<<< HEAD
 		clearTty(p_tty);
+=======
+		sys_clear(p_tty);
+>>>>>>> 02ee3baa64624b18732867ec20a13ebfe0bb22db
 }
 
