@@ -26,6 +26,8 @@ PRIVATE void	init_tty(TTY* p_tty);
 PRIVATE void	tty_do_read(TTY* p_tty);
 PRIVATE void	tty_do_write(TTY* p_tty);
 PRIVATE void	put_key(TTY* p_tty, t_32 key);
+
+PRIVATE void 	clearTempStr(TTY* p_tty);
 PRIVATE void	putToTemp(TTY* p_tty,t_32 key);
 PRIVATE void 	putToStr(TTY* p_tty);
 
@@ -112,10 +114,6 @@ PUBLIC void in_process(TTY* p_tty, t_32 key)
 		case F10:
 		case F11:
 		case F12:select_console(raw_code - F1);break;
-			//if ((key & FLAG_ALT_L) || (key & FLAG_ALT_R)) {	/* Alt + F1~F12 */
-				
-			//}
-			
 		default:
 			break;
 		}
@@ -187,7 +185,6 @@ PRIVATE void tty_do_write(TTY* p_tty)
 		}
 		p_tty->inbuf_count--;
 
-		//disp_int(ch);
 		out_char(p_tty->p_console, ch);
 	}
 }

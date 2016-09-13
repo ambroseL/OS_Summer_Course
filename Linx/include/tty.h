@@ -17,18 +17,20 @@ struct s_console;
 /* TTY */
 typedef struct s_tty
 {
-	t_32	in_buf[TTY_IN_BYTES];	/* TTY ÊäÈë»º³åÇø */
-	t_32*	p_inbuf_head;		/* Ö¸Ïò»º³åÇøÖĞÏÂÒ»¸ö¿ÕÏĞÎ»ÖÃ */
-	t_32*	p_inbuf_tail;		/* Ö¸Ïò¼üÅÌÈÎÎñÓ¦´¦ÀíµÄ¼üÖµ */
-	int	inbuf_count;		/* »º³åÇøÖĞÒÑ¾­Ìî³äÁË¶àÉÙ */
+	t_32	in_buf[TTY_IN_BYTES];	/* TTY è¾“å…¥ç¼“å†²åŒº */
+	t_32*	p_inbuf_head;		/* æŒ‡å‘ç¼“å†²åŒºä¸­ä¸‹ä¸€ä¸ªç©ºé—²ä½ç½® */
+	t_32*	p_inbuf_tail;		/* æŒ‡å‘é”®ç›˜ä»»åŠ¡åº”å¤„ç†çš„é”®å€¼ */
+	int	inbuf_count;		/* ç¼“å†²åŒºä¸­å·²ç»å¡«å……äº†å¤šå°‘ */
 	
-	char  	tmpStr[TTY_IN_BYTES];	//ÁÙÊ±×Ö·û´®
+	char  	tmpStr[TTY_IN_BYTES];	//ä¸´æ—¶å­—ç¬¦ä¸²
 	int 	tmpLen;
-	char 	str[TTY_IN_BYTES];	//×Ö·û´®
+	char 	str[TTY_IN_BYTES];	//å­—ç¬¦ä¸²
 	int 	len;
 	t_bool 	startScanf;
+
 	struct s_console *	p_console;
 }TTY;
+
 
 
 #endif /* _TINIX_TTY_H_ */

@@ -571,7 +571,7 @@ double term()
 	return temp;
 }
 
-void printNum(double d,int precision)
+void printNum(double d)
 {
 	if(d<0)
 	{
@@ -581,6 +581,7 @@ void printNum(double d,int precision)
 	int m = d;
 	int digit = m;
 	d-=m;
+	int precision = 3;
 	char num[precision+1];
 	num[precision] = '\0';
 	int i = 0;
@@ -627,6 +628,8 @@ void calculator()
 		}
 		else
 			error();
+		//if(calculatorTty->p_console->cursor >= calculatorTty->p_console->v_mem_limit)
+			//sys_clear(calculatorTty);
 	}
 	printf("Bye! \n");
 }
@@ -639,6 +642,52 @@ void calculator()
 
 
 TTY *GameTty=tty_table+3;
+
+double player,CPU;
+int money,betMoney;
+
+double getCard()
+{
+	int card = rand()%13+1;
+	double value = card > 10? 0.5:card;
+	return value;
+}
+
+void sendTwoCards()
+{
+
+	double valuePlayerOne = getCard();
+	double valuePlayerTwo = getCard();
+	player = valuePlayerOne + valuePlayerTwo;
+
+	double valueCPUOne = getCard();
+	double valueCPUTwo = getCard();
+	CPU = valueCPUOne + valueCPUTwo;
+}
+
+void printScore()
+{	
+	printf("Now your score is:");
+	printNum(player);
+	
+}
+
+void printMoney()
+{
+	printf("Now you have %d$, you have bet %d$\n",money,betMoney);
+}
+
+int judgeWinner()
+{
+	return player > CPU;
+}
+
+int checkExplode(double value)
+{
+	return value > 21;
+}
+
+
 
 void readNumber(int* x)
 {
@@ -658,31 +707,106 @@ void Game()
 {	
 	while (1)
 	{
-		printf("There is a number between 1 and 1000 , guess what is it according to the tips.\n");
-		int iTarget,iNumber;
-		iTarget = rand()% 1000 + 1;//利用系统时钟函数产生随机数						
-		do
-		{			
-			detectTty(GameTty);			
-			printf("enter your number:%d\n",iTarget);								
-			readNumber(&iNumber);
-			if(iNumber<iTarget)
-				printf("What you guess is smaller than the target.\n");
-			else if(iNumber>iTarget)
-				printf("What you guess is bigger than the target.\n");
-			else{
-				printf("Congratulations.You are right.\n");
-				printf("10 Seconds later another game start.\n");
-				milli_delay(1);	
-				clearTty(GameTty);			
+		player = CPU = 0;
+		money = 200;
+		betMoney = 10;
+		int count = 0;
+		printf("Welcome! This is a 21 game. You will have 200$ as the initial gambling money.\n");
+		printf("To start with, you and computer will get two cards.\n");
+		sendTwoCards();
+		while(1)
+		{	
+			detectTty(GameTty);		
+			if(money <= 0)
+			{
+				printf("No money left! You lose!\n");
+				break;
+			}	
+			if(count >= 5)
+			{
+				if(judgeWinner())
+				{
+					printf("You win this round!!!\n");
+					money += betMoney;
+					betMoney = 10;
+					sendTwoCards();
+				}	
+				else {
+					printf("You lose this round!!!\n");
+					money -= betMoney;
+					betMoney = 10;
+					sendTwoCards();
+				}
+				count = 0;
+				continue;
 			}
-		}while(iNumber != iTarget);
+			printMoney();
+			printScore();
+			printf("Are you willing to continue? Y/N\n");
+			char c;
+			do{				
+				openStartScanf(GameTty);
+				while (GameTty->startScanf) ;				
+				c = GameTty->str[0];
+
+			}while(c !='Y'&& c !='y' && c !='N' && c !='n');
+			closeStartScanf(GameTty);
+			if(c=='N'||c=='n')
+			{
+				if(judgeWinner())
+				{
+					printf("You win this round!!!\n");
+					money += betMoney;
+					player = CPU = 0;
+					betMoney = 0;
+				}	
+				else {
+					printf("You lose this round!!!\n");
+					money -= betMoney;
+					player = CPU = 0;
+					betMoney = 0;
+				}
+				break;
+			}	
+				
+			
+			betMoney *= 2;
+			
+			printf("You get another card.\n");
+			player += getCard();
+			CPU += getCard();
+			count++;
+
+			if(checkExplode(player))
+			{
+				printf("Sorry! Your score exceeds 21!\n");
+				printf("You lose this round!\n");
+				money -= betMoney;
+				player = CPU = 0;
+				betMoney = 10;
+				sendTwoCards();
+				continue;
+			}	
+			
+			if(checkExplode(CPU))
+			{
+				printf("Congrats! Computer's score exceeds 21!\n");
+				printf("You win this round!\n");
+				money += betMoney;
+				player = CPU = 0;
+				betMoney = 10;
+				sendTwoCards();
+				continue;
+			}
+			
+		}
 	}
 }
 
 
+
 /*======================================================================*
-								Calendar
+				Calendar
 *=======================================================================*/
 
 TTY *calendarTty=tty_table+4;
